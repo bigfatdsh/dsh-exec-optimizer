@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-14T10:50:32.243Z",
+  "generatedAt": "2026-10-14T11:05:04.092Z",
   "runtime": {
     "node": "v24.21.0",
     "pluginRoot": "/Users/yangletian/Documents/deepseek-harness/default-workspace/dsh-exec-optimizer/"
@@ -20,10 +20,10 @@
     {
       "feature": "结果上限",
       "metric": "cap(repo-source)",
-      "before": 25914,
+      "before": 30601,
       "after": 6932,
-      "saved": 18982,
-      "savedPct": 73.2,
+      "saved": 23669,
+      "savedPct": 77.3,
       "unit": "chars",
       "kind": "measured",
       "note": "全文落盘且逐字节回读一致"
@@ -31,10 +31,10 @@
     {
       "feature": "结果上限",
       "metric": "cap(repo-source-via-bash)",
-      "before": 25914,
+      "before": 30601,
       "after": 6941,
-      "saved": 18973,
-      "savedPct": 73.2,
+      "saved": 23660,
+      "savedPct": 77.3,
       "unit": "chars",
       "kind": "measured",
       "note": "全文落盘且逐字节回读一致"
@@ -282,6 +282,61 @@
       "note": "净省 ≈ 648 token/轮（13 个真实形状的工具；索引本身不进每轮请求，只在 list 时产生）"
     },
     {
+      "feature": "自动换档",
+      "metric": "目录打分（越低越便宜）",
+      "before": 0,
+      "after": 2,
+      "saved": -2,
+      "savedPct": 0,
+      "unit": "个模型",
+      "kind": "measured",
+      "note": "deepseek-flash=-1，deepseek-v4-pro=6"
+    },
+    {
+      "feature": "自动换档",
+      "metric": "轻重组「quiet」（当前 flash）",
+      "before": 0,
+      "after": 0,
+      "saved": 0,
+      "savedPct": 0,
+      "unit": "换档",
+      "kind": "measured",
+      "note": "不动（保持当前模型）"
+    },
+    {
+      "feature": "自动换档",
+      "metric": "轻重组「light」（当前 flash）",
+      "before": 0,
+      "after": 0,
+      "saved": 0,
+      "savedPct": 0,
+      "unit": "换档",
+      "kind": "measured",
+      "note": "不动（保持当前模型）"
+    },
+    {
+      "feature": "自动换档",
+      "metric": "轻重组「standard」（当前 flash）",
+      "before": 0,
+      "after": 0,
+      "saved": 0,
+      "savedPct": 0,
+      "unit": "换档",
+      "kind": "measured",
+      "note": "不动（保持当前模型）"
+    },
+    {
+      "feature": "自动换档",
+      "metric": "轻重组「heavy」（当前 flash）",
+      "before": 0,
+      "after": 1,
+      "saved": -1,
+      "savedPct": 0,
+      "unit": "换档",
+      "kind": "measured",
+      "note": "→ deepseek-v4-pro（strongest in catalog (score 6)）"
+    },
+    {
       "feature": "提前自动压缩",
       "metric": "宿主的自动压缩线（复算，仅参考）",
       "before": 678464,
@@ -308,18 +363,18 @@
     {
       "fixture": "repo-source",
       "tool": "read",
-      "before": 25914,
+      "before": 30601,
       "after": 6932,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-J2LM69/bench-repo-source.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-MVAEzI/bench-repo-source.txt"
     },
     {
       "fixture": "repo-source-via-bash",
       "tool": "bash",
-      "before": 25914,
+      "before": 30601,
       "after": 6941,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-J2LM69/bench-repo-source-via-bash.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-MVAEzI/bench-repo-source-via-bash.txt"
     },
     {
       "fixture": "test-runner",
@@ -327,7 +382,7 @@
       "before": 31273,
       "after": 6932,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-J2LM69/bench-test-runner.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-MVAEzI/bench-test-runner.txt"
     },
     {
       "fixture": "grep-hits",
@@ -335,7 +390,7 @@
       "before": 88769,
       "after": 6930,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-J2LM69/bench-grep-hits.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-MVAEzI/bench-grep-hits.txt"
     },
     {
       "fixture": "json-dump",
@@ -343,7 +398,7 @@
       "before": 34564,
       "after": 6930,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-J2LM69/bench-json-dump.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-MVAEzI/bench-json-dump.txt"
     },
     {
       "fixture": "minified-bundle",
@@ -351,7 +406,7 @@
       "before": 60007,
       "after": 6936,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-J2LM69/bench-minified-bundle.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-MVAEzI/bench-minified-bundle.txt"
     },
     {
       "fixture": "dir-listing",
@@ -359,7 +414,7 @@
       "before": 35900,
       "after": 6932,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-J2LM69/bench-dir-listing.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-MVAEzI/bench-dir-listing.txt"
     },
     {
       "fixture": "build-log",
@@ -367,7 +422,7 @@
       "before": 26364,
       "after": 6930,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-J2LM69/bench-build-log.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-MVAEzI/bench-build-log.txt"
     }
   ]
 }
