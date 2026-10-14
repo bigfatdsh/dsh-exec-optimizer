@@ -27,7 +27,8 @@
 #   autoCompactTokens: 300000  提前自动压缩的触发线；宿主默认线是 678,464。
 #   repeatStopAfter: 4         复读连击到这个数就停这一步；0 = 只提醒不停。
 #   lazyCore: ''               核心工具名单（逗号分隔）；留空用内置默认。
-#   tierModelQuiet/Light/Standard/Heavy: ''  'provider/model'；留空 = 不换模型。
+#   tierAuto: true             没写映射时按目录里的档位标记自动挑模型（同供应方内，认不出来就不猜）。
+#   tierModelQuiet/Light/Standard/Heavy: ''  'provider/model'；留空 = 交给自动挑。
 #   tierEffortQuiet/Light: 'off'/'low'      推理档位；留空 = 不动。
 
 - insert:
@@ -46,6 +47,7 @@
         autoCompactTokens: 300000
         repeatStopAfter: 4
         lazyCore: ''
+        tierAuto: true
         tierModelQuiet: ''
         tierModelLight: ''
         tierModelStandard: ''
