@@ -272,7 +272,8 @@ test('样式：注入一次就够，重复 apply 不重复插', async () => {
   exports.apply(ctx)
   assert.equal(styles.length, 1)
   assert.match(styles[0].textContent, /\[data-dsh-exo-panel\]/)
-  assert.match(styles[0].textContent, /max-height:min\(58vh,460px\)/, '开关多了必须有滚动容器')
+  assert.match(styles[0].textContent, /max-height:min\(52vh,420px\)/, '开关多了必须有滚动容器')
+  assert.match(styles[0].textContent, /data-dsh-exo-hint\]\{[^}]*white-space:nowrap/, '提示必须锁成一行，否则八个开关会堆成字墙')
 })
 
 test('协议：readRegistry 读出登记表与值；writeSwitch 发 POST 并回读宿主答案', async () => {
