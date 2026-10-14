@@ -172,10 +172,25 @@ test('登记表：每个 field 都真的有开关，且配置里有对应的默�
   for (const field of fields) {
     assert.equal(typeof Config[`${field}Default`]?.default, 'boolean', `配置里必须有 ${field}Default`)
   }
-  // 每一项都要有中英双语标签与提示，否则面板会出现空行。
+  // 每一项都要有中英双语的三段文字，否则面板会出现空行。
   for (const item of SWITCHES) {
     assert.ok(item.label.zh && item.label.en, `${item.field} 缺标签`)
     assert.ok(item.hint.zh && item.hint.en, `${item.field} 缺提示`)
+    assert.ok(item.detail.zh && item.detail.en, `${item.field} 缺详细说明`)
+  }
+})
+
+test('面板文字：名字够短、提示只有一行、长解释只进 tooltip', () => {
+  for (const item of SWITCHES) {
+    // 名字 4 个字上下：面板 368px 宽，太长的名字会把开关挤出去。
+    assert.ok(item.label.zh.length <= 6, `${item.field} 的名字太长：${item.label.zh}`)
+    assert.ok(item.label.en.length <= 18, `${item.field} 的英文名太长：${item.label.en}`)
+    // 提示**必须**一行放得下（约 24 个汉字），否则八个开关堆成一堵字墙——
+    // 这正是上一版被用户打回来的原因，所以在这里钉死。
+    assert.ok(item.hint.zh.length <= 16, `${item.field} 的提示超过一行：${item.hint.zh}（${item.hint.zh.length} 字）`)
+    assert.ok(item.hint.en.length <= 44, `${item.field} 的英文提示超过一行：${item.hint.en}（${item.hint.en.length} 字符）`)
+    // 长解释可以有，但只能出现在 tooltip 里。
+    assert.ok(item.detail.zh.length > item.hint.zh.length, `${item.field} 的 detail 应当比 hint 详细`)
   }
 })
 
