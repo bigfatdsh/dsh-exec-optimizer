@@ -315,6 +315,29 @@ test('持久化：persist=false 时不落盘', async () => {
   })
 })
 
+test('持久化：盘上留着已删除开关的键时，装配时清掉（死键不会永久留在文件里）', async () => {
+  await withTempHome(async (home) => {
+    const file = join(home, 'exec-optimizer.json')
+    await writeFile(file, JSON.stringify({ parallel: true, modelTier: true, somethingElse: 1 }), 'utf8')
+    const host = fakeHost({ withTools: true })
+    const handle = apply(host.ctx, { log: false })
+    const stored = JSON.parse(await readFile(file, 'utf8'))
+    assert.deepEqual(Object.keys(stored).sort(), ['parallel'], `只该留当前有效的键，实际：${Object.keys(stored).join(', ')}`)
+    assert.equal(stored.parallel, true, '有效键的值要保住')
+    assert.equal(handle.toggles.parallel.get(), true)
+  })
+})
+
+test('持久化：文件本来就干净时不重写（不做无谓的写盘）', async () => {
+  await withTempHome(async (home) => {
+    const file = join(home, 'exec-optimizer.json')
+    await writeFile(file, JSON.stringify({ parallel: true, retry: false }), 'utf8')
+    const before = await readFile(file, 'utf8')
+    apply(fakeHost({ withTools: true }).ctx, { log: false })
+    assert.equal(await readFile(file, 'utf8'), before, '没东西可删就不该动文件')
+  })
+})
+
 test('持久化：盘上文件坏掉时退回默认值，不抛错', async () => {
   await withTempHome(async (home) => {
     await writeFile(join(home, 'exec-optimizer.json'), '{ not json', 'utf8')
