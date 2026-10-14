@@ -179,6 +179,17 @@ test('登记表：每个 field 都真的有开关，且配置里有对应的默�
   }
 })
 
+test('bundle 补丁：里面写的每个配置键都真的存在（未知键会让宿主拒绝加载整个插件）', async () => {
+  const patch = await readFile(new URL('../cordis.patch.yml', import.meta.url), 'utf8')
+  const block = patch.slice(patch.indexOf('config:'))
+  const written = [...block.matchAll(/^\s{8}([a-zA-Z][a-zA-Z0-9]*):/gm)].map((match) => match[1])
+  assert.ok(written.length >= 8, `补丁里应当写全开关默认值，实际解析到：${written.join(', ')}`)
+  const known = new Set(Object.keys(Config))
+  for (const key of written) {
+    assert.ok(known.has(key), `cordis.patch.yml 里的 ${key} 不是本插件的配置键——宿主会校验失败并拒绝加载整个插件`)
+  }
+})
+
 test('默认值：五个安全的开、三个会改动历史的关', () => {
   const host = fakeHost({ withTools: true })
   const handle = apply(host.ctx, { log: false })
