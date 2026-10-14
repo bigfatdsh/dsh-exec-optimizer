@@ -28,7 +28,6 @@ import { mergeArgs, retryHint } from '../lib/replay.js'
 import { RepeatTracker } from '../lib/repeat.js'
 import { DEFAULT_CORE, splitSchemas, toolIndex } from '../lib/lazy.js'
 import { hostThreshold } from '../lib/pressure.js'
-import { autoPick, rankModels } from '../lib/tier.js'
 import { PARALLEL_SECTION, RETRY_SECTION, LAZY_SECTION, repeatReminder } from '../lib/sections.js'
 import { retryTool, loadTool } from '../lib/tool-defs.js'
 import { DEFAULT_CAP_CHARS } from '../lib/optimize.js'
@@ -421,52 +420,6 @@ function benchParallel() {
 }
 
 /**
- * 自动换档：这是**决策表**，不是省钱数。
- *
- * 运行时的模型目录里没有价格字段，所以这里能给出的只有"这一档会挑哪个模型、用哪个
- * 推理强度"——省多少钱取决于供应商的实际价目，本机拿不到，不编。
- *
- * @returns {object[]} 行。
- */
-function benchTier() {
-  const catalog = [
-    { id: 'deepseek-flash', name: 'DeepSeek-V41-Flash' },
-    {
-      id: 'deepseek-v4-pro',
-      name: 'DeepSeek-V4-Pro',
-      description: 'Stronger agentic coding, knowledge, and difficult reasoning; suited to complex or quality-critical tasks at higher cost.',
-    },
-  ]
-  const ranked = rankModels(catalog)
-  const rows = [
-    row({
-      feature: '自动换档',
-      metric: '目录打分（越低越便宜）',
-      before: 0,
-      after: ranked.length,
-      unit: '个模型',
-      kind: 'measured',
-      note: ranked.map((entry) => `${entry.id}=${entry.score}`).join('，'),
-    }),
-  ]
-  for (const bucket of ['quiet', 'light', 'standard', 'heavy']) {
-    const picked = autoPick({ bucket, models: catalog, current: 'deepseek-flash' })
-    rows.push(
-      row({
-        feature: '自动换档',
-        metric: `轻重组「${bucket}」（当前 flash）`,
-        before: 0,
-        after: picked === undefined ? 0 : 1,
-        unit: '换档',
-        kind: 'measured',
-        note: picked === undefined ? '不动（保持当前模型）' : `→ ${picked.id}（${picked.why}）`,
-      }),
-    )
-  }
-  return rows
-}
-
-/**
  * 提前自动压缩（推算，边界实测）。
  *
  * @returns {object[]} 行。
@@ -523,7 +476,6 @@ function main() {
     ...benchRetry(),
     ...benchRepeat(),
     ...benchLazy(),
-    ...benchTier(),
     ...benchAutoCompact(),
   ]
   const report = {
