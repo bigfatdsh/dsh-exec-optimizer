@@ -1,0 +1,373 @@
+{
+  "generatedAt": "2026-10-14T10:38:32.200Z",
+  "runtime": {
+    "node": "v24.21.0",
+    "pluginRoot": "/Users/yangletian/Documents/deepseek-harness/default-workspace/dsh-exec-optimizer/"
+  },
+  "constants": {
+    "CHARS_PER_TOKEN": 4,
+    "BLOCK_OVERHEAD": 4,
+    "capChars": 8192
+  },
+  "assumptions": {
+    "parallelContextChars": 120000,
+    "autoCompactLine": 300000,
+    "autoCompactHostLine": 678464,
+    "autoCompactPerRoundTokens": 150000,
+    "autoCompactRounds": 20
+  },
+  "rows": [
+    {
+      "feature": "结果上限",
+      "metric": "cap(repo-source)",
+      "before": 25914,
+      "after": 6932,
+      "saved": 18982,
+      "savedPct": 73.2,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "全文落盘且逐字节回读一致"
+    },
+    {
+      "feature": "结果上限",
+      "metric": "cap(repo-source-via-bash)",
+      "before": 25914,
+      "after": 6941,
+      "saved": 18973,
+      "savedPct": 73.2,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "全文落盘且逐字节回读一致"
+    },
+    {
+      "feature": "结果上限",
+      "metric": "cap(test-runner)",
+      "before": 31273,
+      "after": 6932,
+      "saved": 24341,
+      "savedPct": 77.8,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "全文落盘且逐字节回读一致"
+    },
+    {
+      "feature": "结果上限",
+      "metric": "cap(grep-hits)",
+      "before": 88769,
+      "after": 6930,
+      "saved": 81839,
+      "savedPct": 92.2,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "全文落盘且逐字节回读一致"
+    },
+    {
+      "feature": "结果上限",
+      "metric": "cap(json-dump)",
+      "before": 34564,
+      "after": 6930,
+      "saved": 27634,
+      "savedPct": 80,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "全文落盘且逐字节回读一致"
+    },
+    {
+      "feature": "结果上限",
+      "metric": "cap(minified-bundle)",
+      "before": 60007,
+      "after": 6936,
+      "saved": 53071,
+      "savedPct": 88.4,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "全文落盘且逐字节回读一致"
+    },
+    {
+      "feature": "结果上限",
+      "metric": "cap(dir-listing)",
+      "before": 35900,
+      "after": 6932,
+      "saved": 28968,
+      "savedPct": 80.7,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "全文落盘且逐字节回读一致"
+    },
+    {
+      "feature": "结果上限",
+      "metric": "cap(build-log)",
+      "before": 26364,
+      "after": 6930,
+      "saved": 19434,
+      "savedPct": 73.7,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "全文落盘且逐字节回读一致"
+    },
+    {
+      "feature": "不动已发内容",
+      "metric": "会被内置裁剪器改写的结果数",
+      "before": 8,
+      "after": 0,
+      "saved": 8,
+      "savedPct": 100,
+      "unit": "条",
+      "kind": "measured",
+      "note": "阈值 8192 字符（head 4096 + tail 1024）；本插件在发送前就把每一条（含 read）裁到线内"
+    },
+    {
+      "feature": "并行工具调用",
+      "metric": "3 个独立调用：串行 vs 一条消息",
+      "before": 240000,
+      "after": 0,
+      "saved": 240000,
+      "savedPct": 100,
+      "unit": "chars",
+      "kind": "computed",
+      "note": "假设每轮上下文 120000 字符；串行 3 轮 → 一条消息 1 轮，省掉 2 次重发"
+    },
+    {
+      "feature": "并行工具调用",
+      "metric": "5 个独立调用：串行 vs 一条消息",
+      "before": 480000,
+      "after": 0,
+      "saved": 480000,
+      "savedPct": 100,
+      "unit": "chars",
+      "kind": "computed",
+      "note": "假设每轮上下文 120000 字符；串行 5 轮 → 一条消息 1 轮，省掉 4 次重发"
+    },
+    {
+      "feature": "并行工具调用",
+      "metric": "8 个独立调用：串行 vs 一条消息",
+      "before": 840000,
+      "after": 0,
+      "saved": 840000,
+      "savedPct": 100,
+      "unit": "chars",
+      "kind": "computed",
+      "note": "假设每轮上下文 120000 字符；串行 8 轮 → 一条消息 1 轮，省掉 7 次重发"
+    },
+    {
+      "feature": "纪律段落成本",
+      "metric": "并行纪律",
+      "before": 0,
+      "after": 581,
+      "saved": -581,
+      "savedPct": 0,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "≈ 146 token/轮"
+    },
+    {
+      "feature": "纪律段落成本",
+      "metric": "失败重放说明",
+      "before": 0,
+      "after": 396,
+      "saved": -396,
+      "savedPct": 0,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "≈ 99 token/轮"
+    },
+    {
+      "feature": "纪律段落成本",
+      "metric": "按需加载说明",
+      "before": 0,
+      "after": 428,
+      "saved": -428,
+      "savedPct": 0,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "≈ 107 token/轮；仅在该开关打开时出现"
+    },
+    {
+      "feature": "工具 schema 成本",
+      "metric": "retry_tool 常驻",
+      "before": 0,
+      "after": 575,
+      "saved": -575,
+      "savedPct": 0,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "≈ 144 token/轮；关掉开关即为 0"
+    },
+    {
+      "feature": "工具 schema 成本",
+      "metric": "load_tools 常驻",
+      "before": 0,
+      "after": 364,
+      "saved": -364,
+      "savedPct": 0,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "≈ 91 token/轮；关掉开关即为 0"
+    },
+    {
+      "feature": "失败重放",
+      "metric": "重发 vs 补丁（edit）",
+      "before": 1075,
+      "after": 147,
+      "saved": 928,
+      "savedPct": 86.3,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "补丁：expected_replacements"
+    },
+    {
+      "feature": "失败重放",
+      "metric": "重发 vs 补丁（bash）",
+      "before": 454,
+      "after": 128,
+      "saved": 326,
+      "savedPct": 71.8,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "补丁：timeoutMs"
+    },
+    {
+      "feature": "失败重放",
+      "metric": "重发 vs 补丁（workflow）",
+      "before": 2002,
+      "after": 144,
+      "saved": 1858,
+      "savedPct": 92.8,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "补丁：meta"
+    },
+    {
+      "feature": "复读抑制",
+      "metric": "判定灵敏度",
+      "before": 0,
+      "after": 4,
+      "saved": -4,
+      "savedPct": 0,
+      "unit": "条碎片触发",
+      "kind": "measured",
+      "note": "默认阈值 2、硬线 4；带工具调用的回合一律清零"
+    },
+    {
+      "feature": "复读抑制",
+      "metric": "拦下 9 轮空转省下的重发",
+      "before": 1200000,
+      "after": 120173,
+      "saved": 1079827,
+      "savedPct": 90,
+      "unit": "chars",
+      "kind": "computed",
+      "note": "假设：不拦则空转 10 轮、每轮重发 120000 字符；拦下后只插一条 173 字符的提醒"
+    },
+    {
+      "feature": "按需加载",
+      "metric": "每个请求的工具 schema（13 个工具）",
+      "before": 4840,
+      "after": 2700,
+      "saved": 2140,
+      "savedPct": 44.2,
+      "unit": "chars",
+      "kind": "measured",
+      "note": "隐藏 5 个，改用一个 449 字符的索引；索引只在调用 list 时进上下文。平均 372 字符/工具，按自己那张表线性放大即可；面板里的 optimizations.toolSchemaChars 是这台机器上的真实值"
+    },
+    {
+      "feature": "按需加载",
+      "metric": "每轮固定省下的 token",
+      "before": 1210,
+      "after": 563,
+      "saved": 647,
+      "savedPct": 53.5,
+      "unit": "token",
+      "kind": "measured",
+      "note": "净省 ≈ 648 token/轮（13 个真实形状的工具；索引本身不进每轮请求，只在 list 时产生）"
+    },
+    {
+      "feature": "提前自动压缩",
+      "metric": "宿主的自动压缩线（复算，仅参考）",
+      "before": 678464,
+      "after": 678464,
+      "saved": 0,
+      "savedPct": 0,
+      "unit": "token",
+      "kind": "measured",
+      "note": "min(1e6 × 0.8, 1e6 − 256e3 − 65536) = 678,464（用户说的\"约 67.8 万\"是准的）"
+    },
+    {
+      "feature": "提前自动压缩",
+      "metric": "同 20 轮里的输入 token",
+      "before": 9784640,
+      "after": 4190400,
+      "saved": 5594240,
+      "savedPct": 57.2,
+      "unit": "token",
+      "kind": "computed",
+      "note": "不提前压：从 300000 涨到 678464，均值 ≈ 489232/轮；提前压：压回 119040 再涨回 300000，均值 ≈ 209520/轮"
+    }
+  ],
+  "resultCapDetail": [
+    {
+      "fixture": "repo-source",
+      "tool": "read",
+      "before": 25914,
+      "after": 6932,
+      "lossless": true,
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-byq4mJ/bench-repo-source.txt"
+    },
+    {
+      "fixture": "repo-source-via-bash",
+      "tool": "bash",
+      "before": 25914,
+      "after": 6941,
+      "lossless": true,
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-byq4mJ/bench-repo-source-via-bash.txt"
+    },
+    {
+      "fixture": "test-runner",
+      "tool": "bash",
+      "before": 31273,
+      "after": 6932,
+      "lossless": true,
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-byq4mJ/bench-test-runner.txt"
+    },
+    {
+      "fixture": "grep-hits",
+      "tool": "grep",
+      "before": 88769,
+      "after": 6930,
+      "lossless": true,
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-byq4mJ/bench-grep-hits.txt"
+    },
+    {
+      "fixture": "json-dump",
+      "tool": "bash",
+      "before": 34564,
+      "after": 6930,
+      "lossless": true,
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-byq4mJ/bench-json-dump.txt"
+    },
+    {
+      "fixture": "minified-bundle",
+      "tool": "read",
+      "before": 60007,
+      "after": 6936,
+      "lossless": true,
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-byq4mJ/bench-minified-bundle.txt"
+    },
+    {
+      "fixture": "dir-listing",
+      "tool": "bash",
+      "before": 35900,
+      "after": 6932,
+      "lossless": true,
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-byq4mJ/bench-dir-listing.txt"
+    },
+    {
+      "fixture": "build-log",
+      "tool": "bash",
+      "before": 26364,
+      "after": 6930,
+      "lossless": true,
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-byq4mJ/bench-build-log.txt"
+    }
+  ]
+}
