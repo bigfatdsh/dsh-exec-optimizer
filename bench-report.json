@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-14T11:13:06.500Z",
+  "generatedAt": "2026-10-14T11:30:59.642Z",
   "runtime": {
     "node": "v24.21.0",
     "pluginRoot": "/Users/yangletian/Documents/deepseek-harness/default-workspace/dsh-exec-optimizer/"
@@ -20,10 +20,10 @@
     {
       "feature": "结果上限",
       "metric": "cap(repo-source)",
-      "before": 24303,
+      "before": 24489,
       "after": 6932,
-      "saved": 17371,
-      "savedPct": 71.5,
+      "saved": 17557,
+      "savedPct": 71.7,
       "unit": "chars",
       "kind": "measured",
       "note": "全文落盘且逐字节回读一致"
@@ -31,10 +31,10 @@
     {
       "feature": "结果上限",
       "metric": "cap(repo-source-via-bash)",
-      "before": 24303,
+      "before": 24489,
       "after": 6941,
-      "saved": 17362,
-      "savedPct": 71.4,
+      "saved": 17548,
+      "savedPct": 71.7,
       "unit": "chars",
       "kind": "measured",
       "note": "全文落盘且逐字节回读一致"
@@ -308,18 +308,18 @@
     {
       "fixture": "repo-source",
       "tool": "read",
-      "before": 24303,
+      "before": 24489,
       "after": 6932,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-HO9CN4/bench-repo-source.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-DZIFKy/bench-repo-source.txt"
     },
     {
       "fixture": "repo-source-via-bash",
       "tool": "bash",
-      "before": 24303,
+      "before": 24489,
       "after": 6941,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-HO9CN4/bench-repo-source-via-bash.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-DZIFKy/bench-repo-source-via-bash.txt"
     },
     {
       "fixture": "test-runner",
@@ -327,7 +327,7 @@
       "before": 31273,
       "after": 6932,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-HO9CN4/bench-test-runner.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-DZIFKy/bench-test-runner.txt"
     },
     {
       "fixture": "grep-hits",
@@ -335,7 +335,7 @@
       "before": 88769,
       "after": 6930,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-HO9CN4/bench-grep-hits.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-DZIFKy/bench-grep-hits.txt"
     },
     {
       "fixture": "json-dump",
@@ -343,7 +343,7 @@
       "before": 34564,
       "after": 6930,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-HO9CN4/bench-json-dump.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-DZIFKy/bench-json-dump.txt"
     },
     {
       "fixture": "minified-bundle",
@@ -351,7 +351,7 @@
       "before": 60007,
       "after": 6936,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-HO9CN4/bench-minified-bundle.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-DZIFKy/bench-minified-bundle.txt"
     },
     {
       "fixture": "dir-listing",
@@ -359,7 +359,7 @@
       "before": 35900,
       "after": 6932,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-HO9CN4/bench-dir-listing.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-DZIFKy/bench-dir-listing.txt"
     },
     {
       "fixture": "build-log",
@@ -367,7 +367,7 @@
       "before": 26364,
       "after": 6930,
       "lossless": true,
-      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-HO9CN4/bench-build-log.txt"
+      "path": "/var/folders/zq/nzq5t6rj5pn0s5p59pdgv1sh0000gn/T/optimizer-bench-DZIFKy/bench-build-log.txt"
     }
   ]
 }
