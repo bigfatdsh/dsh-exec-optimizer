@@ -10,6 +10,7 @@ import test from 'node:test'
 
 import {
   LAZY_SECTION,
+  batchingReminder,
   PARALLEL_SECTION,
   RETRY_SECTION,
   compactedNotice,
@@ -60,4 +61,12 @@ test('压缩说明：说清"压到多少"和"从摘要继续"', () => {
   assert.match(notice, /312345/)
   assert.match(notice, /auto-compacted early/)
   assert.ok(notice.length < 220)
+})
+
+test('并行纠偏提醒：点名工具与步数，要求"列清单再一次发"', () => {
+  const text = batchingReminder(3, 'read')
+  assert.match(text, /3 steps in a row/)
+  assert.match(text, /`read` call/)
+  assert.match(text, /ONE assistant message/)
+  assert.ok(text.length < 420)
 })
