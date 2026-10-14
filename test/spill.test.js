@@ -14,6 +14,7 @@ import {
   DEFAULT_CAP_CHARS,
   capText,
   isPurelyText,
+  lineCount,
   planCap,
   spillFileName,
   spillNotice,
@@ -123,4 +124,27 @@ test('capText：落盘失败时返回 undefined（不裁剪，也绝不抛）', 
 
 test('DEFAULT_CAP_CHARS 与内置裁剪器默认阈值一致（这是 cacheSafe 的算术前提）', () => {
   assert.equal(DEFAULT_CAP_CHARS, 8192)
+})
+
+test('lineCount：数行数，末尾没有换行也算一行', () => {
+  assert.equal(lineCount(''), 0)
+  assert.equal(lineCount('a'), 1)
+  assert.equal(lineCount('a\n'), 1)
+  assert.equal(lineCount('a\nb'), 2)
+  assert.equal(lineCount('a\nb\n'), 2)
+})
+
+test('capText：行式内容（read）会给"下一段从第几行开始"', () => {
+  const text = Array.from({ length: 400 }, (_, index) => `line ${index}`).join('\n')
+  const capped = capText({ text, dir: '/tmp/exo-page-test', sessionId: 's', callId: 'c', capChars: 400, lineBased: true })
+  assert.ok(capped)
+  assert.equal(capped.nextOffset, lineCount(planCap(text, { capChars: 400 }).head) + 1)
+  assert.match(capped.text, new RegExp(`offset=${capped.nextOffset}`))
+})
+
+test('capText：非行式内容（bash）不给 offset 提示', () => {
+  const capped = capText({ text: 'x'.repeat(5000), dir: '/tmp/exo-page-test', sessionId: 's', callId: 'c2', capChars: 400 })
+  assert.ok(capped)
+  assert.equal(capped.nextOffset, undefined)
+  assert.equal(/offset=/.test(capped.text), false)
 })
