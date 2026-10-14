@@ -18,6 +18,8 @@ import test from 'node:test'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { SWITCHES } from '../lib/index.js'
+
 const here = fileURLToPath(new URL('.', import.meta.url))
 const source = readFileSync(join(here, '..', 'lib', 'client.js'), 'utf8')
 
@@ -303,8 +305,36 @@ test('协议：读/写失败都抛错，交给面板显示（不许静默）', a
   await assert.rejects(() => write.exports.writeSwitch('parallel', false), /http-500/)
 })
 
+test('协议：请求被中止（超时）时抛错，面板能显示出来', async () => {
+  const aborting = async (_url, init) => {
+    // 模拟"到点了自己 abort"：fetch 以 AbortError 拒绝。
+    const error = new Error('The operation was aborted.')
+    error.name = 'AbortError'
+    void init
+    throw error
+  }
+  const { exports } = await load({ fetch: aborting })
+  await assert.rejects(() => exports.readRegistry(), /aborted/)
+
+  const { React, mount } = miniReact()
+  const loaded = await load({ fetch: aborting, react: React })
+  const view = mount(loaded.exports.ExecOptimizerButton)
+  find(view.tree(), (node) => node.props['data-dsh-exo-trigger'] !== undefined).props.onClick()
+  await view.settle()
+  const box = find(view.tree(), (node) => node.props['data-dsh-exo-panel'] !== undefined)
+  assert.match(textOf(box), /读不到状态|没存上/, '超时也要给用户一句话，不能空白')
+})
+
+test('协议：超时值是个有限的正数（别写成 0 或 undefined 让请求永不超时）', async () => {
+  const { exports } = await load()
+  assert.equal(typeof exports.TIMEOUT_MS, 'number')
+  assert.ok(exports.TIMEOUT_MS > 0 && Number.isFinite(exports.TIMEOUT_MS) && exports.TIMEOUT_MS <= 60_000, `TIMEOUT_MS=${exports.TIMEOUT_MS}`)
+})
+
 test('面板：没打开时只有图标，打开后画出全部开关行', async () => {
-  const values = { parallel: true, retry: false, resultCap: true, cacheSafe: true, repeatGuard: true, lazyTools: false, autoCompact: false, modelTier: false }
+  // 夹具**就是宿主那张登记表**：面板画几行不再由测试自己说了算，
+  // 宿主加/删一个开关，这里会跟着变（原先手写 8 个 + 断言 8 行，恒真、抓不到增减）。
+  const values = Object.fromEntries(SWITCHES.map((item, index) => [item.field, index % 2 === 0]))
   const { fetchStub } = registryFetch(values)
   const { exports } = await load({ fetch: fetchStub })
   const { React, mount } = miniReact()
@@ -327,7 +357,8 @@ test('面板：没打开时只有图标，打开后画出全部开关行', async
     for (const child of node.children ?? []) walk(child)
   }
   walk(panel)
-  assert.equal(rows.length, 8, '八个开关都要画出来')
+  assert.equal(rows.length, SWITCHES.length, `宿主发了 ${SWITCHES.length} 个开关，面板就得画 ${SWITCHES.length} 行`)
+  assert.ok(SWITCHES.length >= 7, '开关数量本身也要在合理范围，别被随手删空')
   assert.match(textOf(panel), /标签-parallel/)
 })
 
