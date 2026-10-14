@@ -87,9 +87,6 @@ function fakeHost(options = {}) {
       async resolveModelInfo() {
         return { context: { contextWindow: options.contextWindow ?? 1_000_000 } }
       },
-      async listModels() {
-        return options.models ?? []
-      },
     },
   }
   if (options.withPruner !== false) {
@@ -203,19 +200,18 @@ async function withTempHome(fn) {
   }
 }
 
-test('装配：纪律段落与八个开关的登记都在，且没有包住模型调用的钩子', async () => {
+test('装配：纪律段落与七个开关的登记都在，且没有包住模型调用的钩子', async () => {
   await withTempHome(async () => {
     const host = fakeHost()
     const handle = apply(host.ctx, { log: false })
     assert.ok(host.sections.some((section) => section.name === DISCIPLINE_SECTION))
     assert.deepEqual(Object.keys(handle.toggles), [
-      'parallel', 'retry', 'resultCap', 'cacheSafe', 'repeatGuard', 'lazyTools', 'autoCompact', 'modelTier',
+      'parallel', 'retry', 'resultCap', 'cacheSafe', 'repeatGuard', 'lazyTools', 'autoCompact',
     ])
     // 只挂公开契约里这几条；`llm/stream` 那种包模型调用的钩子一个都不许有。
     assert.deepEqual([...host.hooks.keys()].sort(), [
       'agent/disposed',
       'agent/pre-step',
-      'agent/request',
       'session/event',
       'system-prompt/assemble',
       'tools/post-execute',
@@ -568,52 +564,6 @@ test('提前压缩：压缩抛错只降级，不影响这一步', async () => {
   })
 })
 
-test('按任务换档：判出的桶决定请求配置；没映射就原样返回同一个对象', async () => {
-  await withTempHome(async () => {
-    const host = fakeHost()
-    const handle = apply(host.ctx, {
-      log: false,
-      modelTierDefault: true,
-      tierModelQuiet: 'p/flash',
-      tierEffortQuiet: 'off',
-    })
-    const agent = makeAgent('sess-t')
-    await host.waterfall('agent/pre-step', [{ agent, step: 1, turn: 1, messages: [{ content: [{ type: 'text', text: '在吗' }] }] }], () => ({ kind: 'enter', messages: [] }))
-    assert.equal(handle.optimize.tier.bucketOf('sess-t'), 'quiet')
-    const base = { provider: 'p', model: 'pro' }
-    const routed = await host.waterfall('agent/request', [{ agent, turn: 1, step: 1 }], () => base)
-    assert.equal(routed.model, 'flash')
-    assert.equal(routed.reasoningEffort, 'off')
-    assert.equal(routed.provider, 'p')
-    assert.equal(handle.optimize.stats.tierSwitches, 1)
-    assert.equal(base.model, 'pro', '不许改原配置对象')
-  })
-})
-
-test('按任务换档：手选过模型的会话永久让位（手选优先）', async () => {
-  await withTempHome(async () => {
-    const host = fakeHost()
-    const handle = apply(host.ctx, { log: false, modelTierDefault: true, tierModelQuiet: 'p/flash' })
-    const agent = makeAgent('sess-pin')
-    await host.waterfall('agent/pre-step', [{ agent, step: 1, turn: 1, messages: [{ content: [{ type: 'text', text: '在吗' }] }] }], () => ({ kind: 'enter', messages: [] }))
-    host.emit('session/event', [{ id: 'sess-pin' }, { type: 'model/selection', data: { provider: 'p', model: 'pro' } }])
-    const base = { provider: 'p', model: 'pro' }
-    const routed = await host.waterfall('agent/request', [{ agent, turn: 1, step: 1 }], () => base)
-    assert.equal(routed, base, '手选之后必须原样放行')
-    assert.equal(handle.optimize.stats.tierSwitches, 0)
-  })
-})
-
-test('按任务换档：开关关着时一个字段都不动', async () => {
-  await withTempHome(async () => {
-    const host = fakeHost()
-    apply(host.ctx, { log: false, modelTierDefault: false, tierModelQuiet: 'p/flash' })
-    const base = { provider: 'p', model: 'pro' }
-    const routed = await host.waterfall('agent/request', [{ agent: makeAgent() }], () => base)
-    assert.equal(routed, base)
-  })
-})
-
 test('降级：一个钩子抛错不影响其它钩子，警告里点名是哪一段', async () => {
   await withTempHome(async () => {
     const host = fakeHost()
@@ -639,47 +589,6 @@ test('诊断视图：计数、阈值、核心集都报得出来', async () => {
     assert.equal(view.repeatStop, 4)
     assert.ok(view.core.includes('read'))
     assert.deepEqual(view.repeat, { sessions: 0, trips: 0 })
-    assert.equal(view.pinnedSessions, 0)
-  })
-})
-
-test('自动换档：没写映射时按目录打分自动挑，并记下"为什么"', async () => {
-  await withTempHome(async () => {
-    const host = fakeHost({
-      models: [
-        { id: 'cheap-flash', name: 'Cheap Flash' },
-        { id: 'strong-pro', name: 'Strong Pro', description: 'stronger at higher cost' },
-      ],
-    })
-    const handle = apply(host.ctx, { log: false, modelTierDefault: true, tierAuto: true })
-    const agent = makeAgent('sess-auto')
-    // 判成重活（要动手、要读东西的那种）。
-    await host.waterfall('agent/pre-step', [{
-      agent,
-      step: 1,
-      turn: 1,
-      messages: [{ content: [{ type: 'text', text: '把这个项目全部重写一遍，彻底重构并修复所有 bug，注意极端情况' }] }],
-    }], () => ({ kind: 'enter', messages: [] }))
-    const base = { provider: 'p', model: 'cheap-flash' }
-    const routed = await host.waterfall('agent/request', [{ agent, turn: 1, step: 1 }], () => base)
-    assert.equal(routed.model, 'strong-pro', '重活该换到目录里最强的那个')
-    assert.match(handle.optimize.stats.tierLast, /strongest/)
-    assert.equal(handle.optimize.stats.tierSwitches, 1)
-  })
-})
-
-test('自动换档：目录里认不出强弱（分数全一样）就一个字段都不动', async () => {
-  await withTempHome(async () => {
-    const host = fakeHost({ models: [{ id: 'model-a' }, { id: 'model-b' }] })
-    apply(host.ctx, { log: false, modelTierDefault: true, tierAuto: true })
-    const agent = makeAgent('sess-flat')
-    await host.waterfall('agent/pre-step', [{
-      agent, step: 1, turn: 1,
-      messages: [{ content: [{ type: 'text', text: '重构这个模块并跑通全部测试' }] }],
-    }], () => ({ kind: 'enter', messages: [] }))
-    const base = { provider: 'p', model: 'model-a' }
-    const routed = await host.waterfall('agent/request', [{ agent, turn: 1, step: 1 }], () => base)
-    assert.equal(routed, base, '认不出来就不猜')
   })
 })
 
