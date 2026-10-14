@@ -3,7 +3,7 @@
 # 只插入一行：把这个插件挂到 Host 根部。
 #
 # 为什么在根部：
-#   * 八项优化挂的是宿主公开契约的钩子（`system-prompt/assemble`、
+#   * 七项优化挂的是宿主公开契约的钩子（`system-prompt/assemble`、
 #     `tools/post-execute`、`session/event`、`agent/pre-step`）。
 #     这些钩子的作用域规则是"根上挂一次覆盖所有 agent"，也就不会随会话数增长。
 #   * 纪律段落要在所有 preset 上一致生效，且开关不变时逐字节稳定，不产生额外缓存失效。
