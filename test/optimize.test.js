@@ -71,6 +71,8 @@ function fakeHost(options = {}) {
           ? options.executeResult(exec)
           : { isError: false, content: [{ type: 'text', text: `ran ${exec.name}` }] }
       },
+      // 并行纠偏要问"这个工具声明了 isConcurrencySafe 吗"——正是宿主自己用的判据。
+      get: (name) => (options.batchable ?? []).includes(name) ? { name, isConcurrencySafe: () => true } : { name },
     },
     tokenMeter: {
       measure: () => ({ totalTokens: typeof options.tokens === 'number' ? options.tokens : 0 }),
@@ -84,6 +86,9 @@ function fakeHost(options = {}) {
     llm: {
       async resolveModelInfo() {
         return { context: { contextWindow: options.contextWindow ?? 1_000_000 } }
+      },
+      async listModels() {
+        return options.models ?? []
       },
     },
   }
@@ -635,5 +640,92 @@ test('诊断视图：计数、阈值、核心集都报得出来', async () => {
     assert.ok(view.core.includes('read'))
     assert.deepEqual(view.repeat, { sessions: 0, trips: 0 })
     assert.equal(view.pinnedSessions, 0)
+  })
+})
+
+test('自动换档：没写映射时按目录打分自动挑，并记下"为什么"', async () => {
+  await withTempHome(async () => {
+    const host = fakeHost({
+      models: [
+        { id: 'cheap-flash', name: 'Cheap Flash' },
+        { id: 'strong-pro', name: 'Strong Pro', description: 'stronger at higher cost' },
+      ],
+    })
+    const handle = apply(host.ctx, { log: false, modelTierDefault: true, tierAuto: true })
+    const agent = makeAgent('sess-auto')
+    // 判成重活（要动手、要读东西的那种）。
+    await host.waterfall('agent/pre-step', [{
+      agent,
+      step: 1,
+      turn: 1,
+      messages: [{ content: [{ type: 'text', text: '把这个项目全部重写一遍，彻底重构并修复所有 bug，注意极端情况' }] }],
+    }], () => ({ kind: 'enter', messages: [] }))
+    const base = { provider: 'p', model: 'cheap-flash' }
+    const routed = await host.waterfall('agent/request', [{ agent, turn: 1, step: 1 }], () => base)
+    assert.equal(routed.model, 'strong-pro', '重活该换到目录里最强的那个')
+    assert.match(handle.optimize.stats.tierLast, /strongest/)
+    assert.equal(handle.optimize.stats.tierSwitches, 1)
+  })
+})
+
+test('自动换档：目录里认不出强弱（分数全一样）就一个字段都不动', async () => {
+  await withTempHome(async () => {
+    const host = fakeHost({ models: [{ id: 'model-a' }, { id: 'model-b' }] })
+    apply(host.ctx, { log: false, modelTierDefault: true, tierAuto: true })
+    const agent = makeAgent('sess-flat')
+    await host.waterfall('agent/pre-step', [{
+      agent, step: 1, turn: 1,
+      messages: [{ content: [{ type: 'text', text: '重构这个模块并跑通全部测试' }] }],
+    }], () => ({ kind: 'enter', messages: [] }))
+    const base = { provider: 'p', model: 'model-a' }
+    const routed = await host.waterfall('agent/request', [{ agent, turn: 1, step: 1 }], () => base)
+    assert.equal(routed, base, '认不出来就不猜')
+  })
+})
+
+test('并行纠偏：连着三步单发可并行工具 → 下一步插一句提醒', async () => {
+  await withTempHome(async () => {
+    const host = fakeHost({ batchable: ['read', 'grep'] })
+    const handle = apply(host.ctx, { log: false })
+    const agent = makeAgent('sess-batch')
+    const session = { id: 'sess-batch' }
+    for (const step of [1, 2, 3]) {
+      host.emit('session/event', [session, { type: 'tool/call', data: { turn: 1, step, name: 'read' } }])
+    }
+    const decision = await host.waterfall('agent/pre-step', [{ agent, step: 4, turn: 1, messages: [] }], () => ({ kind: 'enter', messages: [] }))
+    assert.equal(decision.messages.length, 1, '必须插一条提醒')
+    assert.match(decision.messages[0].content[0].text, /one `read` call/)
+    assert.equal(handle.optimize.stats.batchNudges, 1)
+    // 同一个 turn 内不再重复插话。
+    host.emit('session/event', [session, { type: 'tool/call', data: { turn: 1, step: 5, name: 'read' } }])
+    const again = await host.waterfall('agent/pre-step', [{ agent, step: 6, turn: 1, messages: [] }], () => ({ kind: 'enter', messages: [] }))
+    assert.equal(again.messages.length, 0)
+  })
+})
+
+test('并行纠偏：本来就必须串行的工具（没声明并行分类器）不提醒', async () => {
+  await withTempHome(async () => {
+    const host = fakeHost({ batchable: [] })
+    const handle = apply(host.ctx, { log: false })
+    const agent = makeAgent('sess-serial')
+    for (const step of [1, 2, 3]) {
+      host.emit('session/event', [{ id: 'sess-serial' }, { type: 'tool/call', data: { turn: 1, step, name: 'write' } }])
+    }
+    const decision = await host.waterfall('agent/pre-step', [{ agent, step: 4, turn: 1, messages: [] }], () => ({ kind: 'enter', messages: [] }))
+    assert.equal(decision.messages.length, 0)
+    assert.equal(handle.optimize.stats.batchNudges, 0)
+  })
+})
+
+test('并行纠偏：开关关掉就一条都不记', async () => {
+  await withTempHome(async () => {
+    const host = fakeHost({ batchable: ['read'] })
+    const handle = apply(host.ctx, { log: false })
+    handle.toggles.parallel.set(false)
+    for (const step of [1, 2, 3]) {
+      host.emit('session/event', [{ id: 's' }, { type: 'tool/call', data: { turn: 1, step, name: 'read' } }])
+    }
+    const decision = await host.waterfall('agent/pre-step', [{ agent: makeAgent('s'), step: 4, turn: 1, messages: [] }], () => ({ kind: 'enter', messages: [] }))
+    assert.equal(decision.messages.length, 0)
   })
 })
