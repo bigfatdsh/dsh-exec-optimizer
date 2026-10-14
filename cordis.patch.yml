@@ -4,7 +4,7 @@
 #
 # 为什么在根部：
 #   * 八项优化挂的是宿主公开契约的钩子（`system-prompt/assemble`、
-#     `tools/post-execute`、`session/event`、`agent/pre-step`、`agent/request`）。
+#     `tools/post-execute`、`session/event`、`agent/pre-step`）。
 #     这些钩子的作用域规则是"根上挂一次覆盖所有 agent"，也就不会随会话数增长。
 #   * 纪律段落要在所有 preset 上一致生效，且开关不变时逐字节稳定，不产生额外缓存失效。
 #   * **没有任何一处包住模型调用**（不碰 `llm/stream`、不改模型目录、不碰选择器）。
@@ -17,7 +17,6 @@
 #   * repeatGuardDefault: true  —— 只在连续空转时插话 → 默认开。
 #   * lazyToolsDefault: false   —— 工具表变化会重建一次前缀缓存 → 默认关。
 #   * autoCompactDefault: false —— 压缩要花一次摘要调用并改写历史 → 默认关。
-#   * modelTierDefault: false   —— 换模型要花钱、也要用户点头 → 默认关。
 #
 # 开关状态记在 <DSH_HOME>/exec-optimizer.json 里（persist: true 时），重启后保持。
 # log: false —— 排查"到底生效没生效"时改成 true。
@@ -27,9 +26,6 @@
 #   autoCompactTokens: 300000  提前自动压缩的触发线；宿主默认线是 678,464。
 #   repeatStopAfter: 4         复读连击到这个数就停这一步；0 = 只提醒不停。
 #   lazyCore: ''               核心工具名单（逗号分隔）；留空用内置默认。
-#   tierAuto: true             没写映射时按目录里的档位标记自动挑模型（同供应方内，认不出来就不猜）。
-#   tierModelQuiet/Light/Standard/Heavy: ''  'provider/model'；留空 = 交给自动挑。
-#   tierEffortQuiet/Light: 'off'/'low'      推理档位；留空 = 不动。
 
 - insert:
     - id: exec-optimizer
@@ -42,19 +38,9 @@
         repeatGuardDefault: true
         lazyToolsDefault: false
         autoCompactDefault: false
-        modelTierDefault: false
         resultCapChars: 8192
         autoCompactTokens: 300000
         repeatStopAfter: 4
         lazyCore: ''
-        tierAuto: true
-        tierModelQuiet: ''
-        tierModelLight: ''
-        tierModelStandard: ''
-        tierModelHeavy: ''
-        tierEffortQuiet: 'off'
-        tierEffortLight: 'low'
-        tierEffortStandard: ''
-        tierEffortHeavy: ''
         persist: true
         log: false
