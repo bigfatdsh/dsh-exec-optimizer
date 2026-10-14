@@ -1,0 +1,57 @@
+{
+  "name": "dsh-exec-optimizer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "执行优化：输入栏右侧「执行优化」面板里的八个开关，全部挂在 DSH 公开契约的钩子上，没有一处包住模型调用。并行工具调用纪律、失败重放（只发改动字段）、工具结果发送前上限+落盘、不动已发内容（让内置裁剪器无事可做）、复读抑制、工具说明按需加载、提前自动压缩、按任务换档。所有失败方向都是「原样工作」，不会让请求失败。",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "token",
+    "cost",
+    "parallel-tool-calls",
+    "retry",
+    "edit-and-replay",
+    "context",
+    "compaction",
+    "prompt-cache",
+    "lazy-tools"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "bench-report.md",
+    "bench-report.json"
+  ],
+  "meta": {
+    "title": "执行优化",
+    "description": "八个开关：并行纪律、失败重放、结果上限、不动已发内容、复读抑制、按需加载、提前压缩、按任务换档。"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "verify": "node tools/verify-client-bundle.mjs",
+    "live": "node tools/live-verify.mjs",
+    "bench": "node tools/bench.mjs"
+  }
+}
