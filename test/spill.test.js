@@ -88,7 +88,9 @@ test('capText：全文落盘，替换文本里带路径', async () => {
     assert.equal(await readFile(capped.path, 'utf8'), text, '盘上必须是**完整**全文')
     const plan = planCap(text, { capChars: 1000 })
     assert.equal(capped.dropped, plan.dropped, 'dropped 必须等于 planCap 算出来的正文字符数')
-    assert.equal(capped.text, plan.head + spillNotice({ ...plan, path: capped.path }) + plan.tail)
+    // 提示在最前面：后面还有别的裁剪器时，取回路径必须活下来。
+    assert.ok(capped.text.startsWith('\n\n[...'), '裁剪提示必须在最前面')
+    assert.equal(capped.text, spillNotice({ ...plan, path: capped.path }) + plan.head + plan.tail)
     assert.ok(capped.dropped > 18000)
   } finally {
     await rm(dir, { recursive: true, force: true })
