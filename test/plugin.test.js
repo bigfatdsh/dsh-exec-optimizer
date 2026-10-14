@@ -205,13 +205,17 @@ test('bundle 补丁：里面写的每个配置键都真的存在（未知键会�
   }
 })
 
-test('默认值：五个安全的开、三个会改动历史的关', () => {
-  const host = fakeHost({ withTools: true })
-  const handle = apply(host.ctx, { log: false })
-  const on = Object.entries(handle.toggleValues()).filter(([, value]) => value).map(([key]) => key)
-  const off = Object.entries(handle.toggleValues()).filter(([, value]) => value !== true).map(([key]) => key)
-  assert.deepEqual(on.slice().sort(), ['cacheSafe', 'parallel', 'repeatGuard', 'resultCap', 'retry'])
-  assert.deepEqual(off.slice().sort(), ['autoCompact', 'lazyTools', 'modelTier'])
+test('默认值：五个安全的开、三个会改动历史的关', async () => {
+  // **必须在临时 DSH_HOME 里跑**：真机上用户可能已经点开过某几个开关，
+  // 直接读真实状态文件会让这条测试随环境时红时绿（踩过一次）。
+  await withTempHome(async () => {
+    const host = fakeHost({ withTools: true })
+    const handle = apply(host.ctx, { log: false })
+    const on = Object.entries(handle.toggleValues()).filter(([, value]) => value).map(([key]) => key)
+    const off = Object.entries(handle.toggleValues()).filter(([, value]) => value !== true).map(([key]) => key)
+    assert.deepEqual(on.slice().sort(), ['cacheSafe', 'parallel', 'repeatGuard', 'resultCap', 'retry'])
+    assert.deepEqual(off.slice().sort(), ['autoCompact', 'lazyTools', 'modelTier'])
+  })
 })
 
 test('端点：GET 给开关值 + 登记表 + 诊断', async () => {
