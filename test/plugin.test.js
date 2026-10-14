@@ -205,7 +205,7 @@ test('bundle 补丁：里面写的每个配置键都真的存在（未知键会�
   }
 })
 
-test('默认值：五个安全的开、三个会改动历史的关', async () => {
+test('默认值：五个安全的开、两个会改动历史的关', async () => {
   // **必须在临时 DSH_HOME 里跑**：真机上用户可能已经点开过某几个开关，
   // 直接读真实状态文件会让这条测试随环境时红时绿（踩过一次）。
   await withTempHome(async () => {
@@ -214,7 +214,7 @@ test('默认值：五个安全的开、三个会改动历史的关', async () =>
     const on = Object.entries(handle.toggleValues()).filter(([, value]) => value).map(([key]) => key)
     const off = Object.entries(handle.toggleValues()).filter(([, value]) => value !== true).map(([key]) => key)
     assert.deepEqual(on.slice().sort(), ['cacheSafe', 'parallel', 'repeatGuard', 'resultCap', 'retry'])
-    assert.deepEqual(off.slice().sort(), ['autoCompact', 'lazyTools', 'modelTier'])
+    assert.deepEqual(off.slice().sort(), ['autoCompact', 'lazyTools'])
   })
 })
 
@@ -349,7 +349,7 @@ test('降级：没有 systemPrompt 时不注册段落，端点仍在', async () 
 test('降级：tools/tokenMeter/compaction/llm 全缺时，只丢对应能力，开关与端点照常', async () => {
   await withTempHome(async () => {
     const host = fakeHost()
-    const handle = apply(host.ctx, { log: false, autoCompactDefault: true, modelTierDefault: true })
+    const handle = apply(host.ctx, { log: false, autoCompactDefault: true })
     assert.equal(host.tools.size, 0, '没有 tools 服务就注册不了工具')
     assert.equal(handle.toggles.autoCompact.get(), true, '开关本身仍然可读可写')
     assert.equal(host.routes.length, 1)
