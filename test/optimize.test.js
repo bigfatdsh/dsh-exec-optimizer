@@ -492,6 +492,26 @@ test('复读抑制：连续空转插提醒，越过硬线停这一步，带工�
   })
 })
 
+test('提醒消息带上 v4 认的来源：kind 是生产者自有字符串，不是 plugin 包装', async () => {
+  await withTempHome(async () => {
+    const host = fakeHost()
+    const handle = apply(host.ctx, { log: false })
+    const agent = makeAgent('sess-v4')
+    const session = { id: 'sess-v4' }
+
+    host.emit('session/event', [session, assistantEvent('好。')])
+    host.emit('session/event', [session, assistantEvent('好')])
+    const decision = await host.waterfall('agent/pre-step', [{ agent, step: 3, turn: 1, messages: [] }], () => ({ kind: 'enter', messages: [] }))
+    assert.equal(decision.messages.length, 1)
+
+    const { source } = decision.messages[0]
+    assert.equal(typeof source.kind, 'string')
+    assert.notEqual(source.kind, 'plugin', '会话格式 v4 明确拒绝 kind: "plugin"（本轮直接失败）')
+    assert.equal(source.plugin, undefined, 'v4 没有独立的 plugin 字段，插件名要并进 kind')
+    assert.equal(source.kind, 'plugin:exec-optimizer')
+  })
+})
+
 test('复读抑制：关掉开关后一条都不记', async () => {
   await withTempHome(async () => {
     const host = fakeHost()
