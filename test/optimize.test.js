@@ -200,13 +200,13 @@ async function withTempHome(fn) {
   }
 }
 
-test('装配：纪律段落与七个开关的登记都在，且没有包住模型调用的钩子', async () => {
+test('装配：纪律段落与八个开关的登记都在，且没有包住模型调用的钩子', async () => {
   await withTempHome(async () => {
     const host = fakeHost()
     const handle = apply(host.ctx, { log: false })
     assert.ok(host.sections.some((section) => section.name === DISCIPLINE_SECTION))
     assert.deepEqual(Object.keys(handle.toggles), [
-      'parallel', 'retry', 'resultCap', 'cacheSafe', 'repeatGuard', 'lazyTools', 'autoCompact',
+      'parallel', 'retry', 'resultCap', 'jsonCompact', 'cacheSafe', 'repeatGuard', 'lazyTools', 'autoCompact',
     ])
     // 只挂公开契约里这几条；`llm/stream` 那种包模型调用的钩子一个都不许有。
     assert.deepEqual([...host.hooks.keys()].sort(), [
@@ -656,5 +656,69 @@ test('并行纠偏：开关关掉就一条都不记', async () => {
     }
     const decision = await host.waterfall('agent/pre-step', [{ agent: makeAgent('s'), step: 4, turn: 1, messages: [] }], () => ({ kind: 'enter', messages: [] }))
     assert.equal(decision.messages.length, 0)
+  })
+})
+
+test('JSON 压缩：纯 JSON 先被压小，压完不再触发截断', async () => {
+  await withTempHome(async () => {
+    const host = fakeHost()
+    const handle = apply(host.ctx, { log: false })
+    const agent = makeAgent('sess-json-a')
+    // 挑选尺寸：缩进版 > 上限，压完 < 上限——正好检验"先压缩、后截断"的顺序。
+    const rows = Array.from({ length: 140 }, (_, index) => ({ id: index, name: `item-${index}`, note: 'x'.repeat(20) }))
+    const pretty = JSON.stringify({ total: rows.length, rows }, null, 2)
+    assert.ok(pretty.length > 8192, `夹具要超过上限，实际 ${pretty.length}`)
+    const decision = await host.waterfall(
+      'tools/post-execute',
+      [{ name: 'mcp__demo__list', callId: 'call-json', arguments: {}, agent }, okResult(pretty)],
+      () => ({ kind: 'accept' }),
+    )
+    assert.equal(decision.kind, 'accept')
+    const out = decision.content.map((block) => block.text).join('')
+    assert.ok(out.length < pretty.length, '应当变小')
+    assert.ok(out.length < 8192, `压完应当装得下上限，实际 ${out.length}`)
+    assert.doesNotMatch(out, /exec-optimizer-spill|tool result middle pruned/, '压完就不该截断')
+    assert.deepEqual(JSON.parse(out), JSON.parse(pretty), '字段一个不能少')
+    assert.equal(handle.toggles.jsonCompact.get(), true)
+  })
+})
+
+test('JSON 压缩：关掉开关原样放行；关掉结果截断也照样压缩', async () => {
+  await withTempHome(async () => {
+    const host = fakeHost()
+    const handle = apply(host.ctx, { log: false })
+    const agent = makeAgent('sess-json-b')
+    const rows = Array.from({ length: 140 }, (_, index) => ({ id: index, name: `item-${index}`, note: 'x'.repeat(20) }))
+    const pretty = JSON.stringify({ rows }, null, 2)
+    const exec = { name: 'mcp__demo__list', callId: 'call-json', arguments: {}, agent }
+
+    // 两段都关掉截断，只留 JSON 压缩做变量：否则"原样不变"会被截断打破。
+    handle.toggles.resultCap.set(false)
+    handle.toggles.jsonCompact.set(false)
+    const off = await host.waterfall('tools/post-execute', [exec, okResult(pretty)], () => ({ kind: 'accept' }))
+    const offText = off.content === undefined ? pretty : off.content.map((block) => block.text).join('')
+    assert.equal(offText, pretty, '关掉后就该逐字节不变')
+
+    handle.toggles.jsonCompact.set(true)
+    const capOff = await host.waterfall('tools/post-execute', [exec, okResult(pretty)], () => ({ kind: 'accept' }))
+    const out = capOff.content.map((block) => block.text).join('')
+    assert.ok(out.length < pretty.length, '截断关掉时，JSON 压缩仍要生效')
+    assert.deepEqual(JSON.parse(out), JSON.parse(pretty))
+  })
+})
+
+test('JSON 压缩：不是整块 JSON 的结果一个字都不动', async () => {
+  await withTempHome(async () => {
+    const host = fakeHost()
+    apply(host.ctx, { log: false })
+    const agent = makeAgent('sess-json-c')
+    const mixed = `$ npm test\n{\n  "a": 1\n}\n\nexit 0\n${'y'.repeat(400)}`
+    const decision = await host.waterfall(
+      'tools/post-execute',
+      [{ name: 'bash', callId: 'call-mixed', arguments: {}, agent }, okResult(mixed)],
+      () => ({ kind: 'accept' }),
+    )
+    const out = decision.content === undefined ? mixed : decision.content.map((block) => block.text).join('')
+    assert.equal(out, mixed)
   })
 })

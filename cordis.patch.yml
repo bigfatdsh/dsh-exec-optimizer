@@ -3,7 +3,7 @@
 # 只插入一行：把这个插件挂到 Host 根部。
 #
 # 为什么在根部：
-#   * 七项优化挂的是宿主公开契约的钩子（`system-prompt/assemble`、
+#   * 八项优化挂的是宿主公开契约的钩子（`system-prompt/assemble`、
 #     `tools/post-execute`、`session/event`、`agent/pre-step`）。
 #     这些钩子的作用域规则是"根上挂一次覆盖所有 agent"，也就不会随会话数增长。
 #   * 纪律段落要在所有 preset 上一致生效，且开关不变时逐字节稳定，不产生额外缓存失效。
@@ -13,6 +13,7 @@
 #   * parallelDefault: true     —— 只加文字、不改既有行为 → 默认开。
 #   * retryDefault: true        —— 加一个 575 字符的工具 + 失败结果后一行提示 → 默认开。
 #   * resultCapDefault: true    —— 改结果但全文落盘可原样取回 → 默认开。
+#   * jsonCompactDefault: true  —— 只去 JSON 字符串外的空白，字节级无损 → 默认开。
 #   * cacheSafeDefault: true    —— 让内置裁剪器无事可做，已发前缀不被改写 → 默认开。
 #   * repeatGuardDefault: true  —— 只在连续空转时插话 → 默认开。
 #   * lazyToolsDefault: false   —— 工具表变化会重建一次前缀缓存 → 默认关。
@@ -34,6 +35,7 @@
         parallelDefault: true
         retryDefault: true
         resultCapDefault: true
+        jsonCompactDefault: true
         cacheSafeDefault: true
         repeatGuardDefault: true
         lazyToolsDefault: false
